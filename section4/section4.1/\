@@ -1,0 +1,183 @@
+
+/*
+ID: wengsht1
+LANG: C++
+TASK: cryptcow
+*/
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <queue>
+#include <map>
+#include <set>
+using namespace std;
+
+#define HOME 
+
+#define MX 130171
+int N, M, K;
+
+char raws[] = "Begin the Escape execution at the Break of Dawn";
+char input[100];
+int cnt[256];
+int ret;
+int p = 0;
+
+char d[] = "COW";
+int  position[3];
+int len_input;
+int len;
+
+bool had[MX];
+inline bool ELFHash(char *s, int length){
+    unsigned long h=0,g;
+    for (int i=0; i<length; i++){
+        h=(h<<4)+s[i];
+        g=h&0xf0000000l;
+        if(g){
+            h^=g>>24;
+        }
+        h&=~g;
+    }
+
+    h = h%MX;
+
+    if(had[h])
+        return true;
+    else{
+        had[h] = true;
+        return false;
+    }
+}
+char tl[100] = "\0";
+void product()
+{
+    memset(tl, 0, sizeof(tl));
+    strncpy(tl, input+position[1]+1, position[2] - position[1] - 1);
+    strncat(tl, input+position[0]+1, position[1] - position[0] - 1);
+    strncat(tl, input+position[2]+1, len_input - position[2] - 1);
+
+    input[position[0]] = '\0';
+    strcat(input, tl);
+}
+string test;
+bool go(int h)
+{
+    char tmpp[100] = "\0";
+    int tmp[3];
+    int mn = 0;
+    if(h) mn = position[h-1] + 1;
+    for(int i = mn;i < len_input;i++)
+    {
+        if(input[i] == d[h])
+        {
+            position[h] = i;
+            if(h < 2)
+            {
+                if((go(h+1)))
+                    return true;
+            }
+            else
+            {
+                p++;
+                strcpy(tmpp, input);
+                product();
+                len_input -=  3;
+
+                test = input;
+
+                int l = 0, r = len_input-1;
+                while(l < len_input && input[l] != 'C') l++;
+                while(r > 0 && input[r] != 'W') r--;
+                if(r) r++;
+
+                if(strncmp(input, raws, l) != 0 || 0 != strcmp(input+r, raws+len - (len_input-r))  || ELFHash(input, len_input)) 
+//                if(ELFHash(input, len_input))
+                {
+                    strcpy(input, tmpp);
+                    p--;
+                    len_input += 3;
+
+                    continue;
+                }
+
+                tmp[0] = position[0];
+                tmp[1] = position[1];
+                tmp[2] = position[2];
+
+                if(p == ret)
+                {
+                    if(strcmp(input, raws) == 0)
+                        return true;
+                }
+                else
+                {
+                    if(go(0))
+                        return true;
+                }
+                position[0] = tmp[0];
+                position[1] = tmp[1];
+                position[2] = tmp[2];
+
+//                reset();
+                strcpy(input, tmpp);
+                len_input += 3;
+                p--;
+            }
+        }
+
+    }
+    return false;
+}
+int main()
+{
+#ifdef HOME
+    freopen("cryptcow.in", "r", stdin);
+    //freopen("cryptcow.out", "w", stdout);
+#endif
+    len = strlen(raws);
+
+    for(int i = 0;i < len;i++) cnt[(int)raws[i]] ++;
+    scanf("%[^\n]s", input);
+    len_input = strlen(input);
+
+    ret = (len_input - len);
+    if(ret % 3)
+    {
+        cout<<"0 0"<<endl;
+
+        return 0;
+    }
+    ret /= 3;
+
+    cnt['C'] += ret;
+    cnt['O'] += ret;
+    cnt['W'] += ret;
+
+    bool ok = true;
+    for(int i = 0;i < len_input;i++)
+    {
+        cnt[(int)input[i]] --;
+        if(cnt[(int)input[i]] < 0)
+        {
+            ok = false;
+
+            break;
+        }
+    }
+    if(!ok)
+        cout<<"0 0"<<endl;
+    else if(strcmp(input, raws) == 0) 
+        cout<<"1 0"<<endl;
+    else if(go(0))
+        cout<<1<<" "<<ret<<endl;
+    else
+        cout<<"0 0"<<endl;
+
+    return 0;
+}
+
